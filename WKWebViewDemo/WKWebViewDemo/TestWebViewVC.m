@@ -7,23 +7,24 @@
 //
 
 #import "TestWebViewVC.h"
-#import "HJQ_WKWebView.h"
+#import "JQWKWebView.h"
 
 @interface TestWebViewVC ()
 
-@property (nonatomic, strong) HJQ_WKWebView *webView;
+@property (nonatomic, strong) JQWKWebView *webView;
 @end
 
 @implementation TestWebViewVC
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _webView = [[HJQ_WKWebView alloc]init];
+    _webView = [[JQWKWebView alloc]init];
     _webView.frame = self.view.bounds;
-    HJQ_Config *config = [[HJQ_Config alloc]init];
+    JQConfig *config = [[JQConfig alloc]init];
     config.indicatorType = Activity;
-    config.request = [[NSMutableURLRequest alloc]initWithURL:[NSURL URLWithString:@"https://www.baidu.com"]];
+    NSURLRequest *request = [[NSURLRequest alloc]initWithURL:[NSURL URLWithString:@"https://www.baidu.com"]];
     [_webView setConfig:config];
+    [_webView loadRequest:request];
     _webView.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:_webView];
 }

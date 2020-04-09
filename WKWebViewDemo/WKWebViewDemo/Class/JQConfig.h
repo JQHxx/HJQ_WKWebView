@@ -20,7 +20,7 @@ typedef enum {
 @interface JQConfig : NSObject
 
 /**
- * 自定义的UA，默认为""
+ * custom userAgent default ""
  */
 @property (nonatomic, copy) NSString *userAgent;
 
@@ -30,25 +30,19 @@ typedef enum {
 @property (nonatomic, strong) NSArray *scriptMessageNames;
 
 /**
-* 相关请求
- * 添加请求头 [webRequest setValue:value forHTTPHeaderField:key];
-*/
-@property (nonatomic, strong) NSMutableURLRequest *request;
-
-/**
- * 进度条样式
+ * Indicator style
  */
 @property (nonatomic, assign) IndicatorType indicatorType;
 
 /**
- *  进度条的颜色
+ *  progressColor
  */
 @property (strong, nonatomic) UIColor *progressColor;
 
 /**
- *  进度条的颜色
- */
-@property (assign, nonatomic) BOOL isConfigMeta;
+*  ajax  set cookie
+*/
+@property (nonatomic, copy) NSString *cookieSource;
 
 @end
 

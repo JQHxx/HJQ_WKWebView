@@ -11,7 +11,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface HJQ_WeakScriptMessageDelegate : NSObject <WKScriptMessageHandler>
+@interface JQWeakScriptMessageDelegate : NSObject <WKScriptMessageHandler>
 
 @property (nonatomic,weak)id<WKScriptMessageHandler> scriptDelegate;
 

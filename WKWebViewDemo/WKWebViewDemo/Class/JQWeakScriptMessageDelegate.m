@@ -6,9 +6,9 @@
 //  Copyright © 2020 OFweek01. All rights reserved.
 //
 
-#import "HJQ_WeakScriptMessageDelegate.h"
+#import "JQWeakScriptMessageDelegate.h"
 
-@implementation HJQ_WeakScriptMessageDelegate
+@implementation JQWeakScriptMessageDelegate
 
 - (instancetype)initWithDelegate:(id<WKScriptMessageHandler>)scriptDelegate {
     self = [super init];

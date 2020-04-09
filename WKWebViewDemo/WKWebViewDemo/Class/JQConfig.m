@@ -6,12 +6,11 @@
 //  Copyright © 2020 OFweek01. All rights reserved.
 //
 
-#import "HJQ_Config.h"
+#import "JQConfig.h"
 
-@implementation HJQ_Config
+@implementation JQConfig
 
-- (instancetype)init
-{
+- (instancetype)init {
     self = [super init];
     if (self) {
         self.progressColor = [UIColor colorWithRed:22.f / 255.f green:126.f / 255.f blue:251.f / 255.f alpha:.8];;

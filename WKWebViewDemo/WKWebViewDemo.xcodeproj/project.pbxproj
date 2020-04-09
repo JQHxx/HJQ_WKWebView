@@ -15,10 +15,11 @@
 		A0F38FD3243D7A37002D7FBA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FD2243D7A37002D7FBA /* main.m */; };
 		A0F38FDD243D7A37002D7FBA /* WKWebViewDemoTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FDC243D7A37002D7FBA /* WKWebViewDemoTests.m */; };
 		A0F38FE8243D7A37002D7FBA /* WKWebViewDemoUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FE7243D7A37002D7FBA /* WKWebViewDemoUITests.m */; };
-		A0F38FF8243D7A7B002D7FBA /* HJQ_WKWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FF7243D7A7B002D7FBA /* HJQ_WKWebView.m */; };
-		A0F38FFB243D9F77002D7FBA /* HJQ_Config.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FFA243D9F77002D7FBA /* HJQ_Config.m */; };
-		A0F38FFE243DA66C002D7FBA /* HJQ_WeakScriptMessageDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FFD243DA66C002D7FBA /* HJQ_WeakScriptMessageDelegate.m */; };
+		A0F38FF8243D7A7B002D7FBA /* JQWKWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FF7243D7A7B002D7FBA /* JQWKWebView.m */; };
+		A0F38FFB243D9F77002D7FBA /* JQConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FFA243D9F77002D7FBA /* JQConfig.m */; };
+		A0F38FFE243DA66C002D7FBA /* JQWeakScriptMessageDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FFD243DA66C002D7FBA /* JQWeakScriptMessageDelegate.m */; };
 		A0F39001243DB002002D7FBA /* TestWebViewVC.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F39000243DB002002D7FBA /* TestWebViewVC.m */; };
+		A0F39004243EB2EF002D7FBA /* JQWKWebViewEX.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F39003243EB2EF002D7FBA /* JQWKWebViewEX.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,14 +56,16 @@
 		A0F38FE3243D7A37002D7FBA /* WKWebViewDemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WKWebViewDemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0F38FE7243D7A37002D7FBA /* WKWebViewDemoUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WKWebViewDemoUITests.m; sourceTree = "<group>"; };
 		A0F38FE9243D7A37002D7FBA /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A0F38FF6243D7A7B002D7FBA /* HJQ_WKWebView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HJQ_WKWebView.h; sourceTree = "<group>"; };
-		A0F38FF7243D7A7B002D7FBA /* HJQ_WKWebView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HJQ_WKWebView.m; sourceTree = "<group>"; };
-		A0F38FF9243D9F77002D7FBA /* HJQ_Config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HJQ_Config.h; sourceTree = "<group>"; };
-		A0F38FFA243D9F77002D7FBA /* HJQ_Config.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HJQ_Config.m; sourceTree = "<group>"; };
-		A0F38FFC243DA66C002D7FBA /* HJQ_WeakScriptMessageDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HJQ_WeakScriptMessageDelegate.h; sourceTree = "<group>"; };
-		A0F38FFD243DA66C002D7FBA /* HJQ_WeakScriptMessageDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HJQ_WeakScriptMessageDelegate.m; sourceTree = "<group>"; };
+		A0F38FF6243D7A7B002D7FBA /* JQWKWebView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JQWKWebView.h; sourceTree = "<group>"; };
+		A0F38FF7243D7A7B002D7FBA /* JQWKWebView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JQWKWebView.m; sourceTree = "<group>"; };
+		A0F38FF9243D9F77002D7FBA /* JQConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JQConfig.h; sourceTree = "<group>"; };
+		A0F38FFA243D9F77002D7FBA /* JQConfig.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JQConfig.m; sourceTree = "<group>"; };
+		A0F38FFC243DA66C002D7FBA /* JQWeakScriptMessageDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JQWeakScriptMessageDelegate.h; sourceTree = "<group>"; };
+		A0F38FFD243DA66C002D7FBA /* JQWeakScriptMessageDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JQWeakScriptMessageDelegate.m; sourceTree = "<group>"; };
 		A0F38FFF243DB002002D7FBA /* TestWebViewVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestWebViewVC.h; sourceTree = "<group>"; };
 		A0F39000243DB002002D7FBA /* TestWebViewVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestWebViewVC.m; sourceTree = "<group>"; };
+		A0F39002243EB2EF002D7FBA /* JQWKWebViewEX.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = JQWKWebViewEX.h; sourceTree = "<group>"; };
+		A0F39003243EB2EF002D7FBA /* JQWKWebViewEX.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = JQWKWebViewEX.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,12 +153,14 @@
 		A0F38FF5243D7A4D002D7FBA /* Class */ = {
 			isa = PBXGroup;
 			children = (
-				A0F38FF6243D7A7B002D7FBA /* HJQ_WKWebView.h */,
-				A0F38FF7243D7A7B002D7FBA /* HJQ_WKWebView.m */,
-				A0F38FF9243D9F77002D7FBA /* HJQ_Config.h */,
-				A0F38FFA243D9F77002D7FBA /* HJQ_Config.m */,
-				A0F38FFC243DA66C002D7FBA /* HJQ_WeakScriptMessageDelegate.h */,
-				A0F38FFD243DA66C002D7FBA /* HJQ_WeakScriptMessageDelegate.m */,
+				A0F38FF6243D7A7B002D7FBA /* JQWKWebView.h */,
+				A0F38FF7243D7A7B002D7FBA /* JQWKWebView.m */,
+				A0F38FF9243D9F77002D7FBA /* JQConfig.h */,
+				A0F38FFA243D9F77002D7FBA /* JQConfig.m */,
+				A0F38FFC243DA66C002D7FBA /* JQWeakScriptMessageDelegate.h */,
+				A0F38FFD243DA66C002D7FBA /* JQWeakScriptMessageDelegate.m */,
+				A0F39002243EB2EF002D7FBA /* JQWKWebViewEX.h */,
+				A0F39003243EB2EF002D7FBA /* JQWKWebViewEX.m */,
 			);
 			path = Class;
 			sourceTree = "<group>";
@@ -290,13 +295,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A0F38FF8243D7A7B002D7FBA /* HJQ_WKWebView.m in Sources */,
-				A0F38FFB243D9F77002D7FBA /* HJQ_Config.m in Sources */,
+				A0F38FF8243D7A7B002D7FBA /* JQWKWebView.m in Sources */,
+				A0F39004243EB2EF002D7FBA /* JQWKWebViewEX.m in Sources */,
+				A0F38FFB243D9F77002D7FBA /* JQConfig.m in Sources */,
 				A0F38FC8243D7A34002D7FBA /* ViewController.m in Sources */,
 				A0F38FC2243D7A34002D7FBA /* AppDelegate.m in Sources */,
 				A0F38FD3243D7A37002D7FBA /* main.m in Sources */,
 				A0F39001243DB002002D7FBA /* TestWebViewVC.m in Sources */,
-				A0F38FFE243DA66C002D7FBA /* HJQ_WeakScriptMessageDelegate.m in Sources */,
+				A0F38FFE243DA66C002D7FBA /* JQWeakScriptMessageDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

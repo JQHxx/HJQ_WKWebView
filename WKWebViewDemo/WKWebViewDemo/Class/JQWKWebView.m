@@ -6,22 +6,22 @@
 //  Copyright © 2020 OFweek01. All rights reserved.
 //
 
-#import "HJQ_WKWebView.h"
+#import "JQWKWebView.h"
 #import <objc/runtime.h>
-#import "HJQ_WeakScriptMessageDelegate.h"
+#import "JQWeakScriptMessageDelegate.h"
 
-@interface HJQ_WKWebView() <WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler>
+@interface JQWKWebView() <WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler>
 
 @property (nonatomic, strong) WKWebView *wkWebView;
 @property (nonatomic, strong) UIActivityIndicatorView *loadingView;
 @property (nonatomic, strong) UIView *progressView;
 @property (nonatomic, strong) CALayer *progresslayer;
 @property (nonatomic, strong) WKWebViewConfiguration *wkConfig;
-@property (nonatomic, strong) HJQ_Config *config;
+@property (nonatomic, strong) JQConfig *config;
 
 @end
 
-@implementation HJQ_WKWebView
+@implementation JQWKWebView
 
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -59,8 +59,7 @@
 }
 
 #pragma mark - Public methods
-// 暂停浏览器播放
-- (void) pauseWebPlay {
+- (void)pauseWebPlay {
     NSString *videoJS = @"var videos = document.getElementsByTagName('video');\
     for (var i=0;i < videos.length;i++){\
         videos[i].pause();\
@@ -76,7 +75,7 @@
     }];
 }
 
-- (void) setConfig: (HJQ_Config*)config {
+- (void)setConfig:(JQConfig *)config {
     _config = config;
     if (self.config) {
         if (self.config.indicatorType == Progress) {
@@ -93,40 +92,49 @@
             [self addSubview:self.loadingView];
         }
     }
-
-    NSString *jScript = @"var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'width=device-width'); document.getElementsByTagName('head')[0].appendChild(meta);";
-    WKUserScript *wkUScript = [[WKUserScript alloc] initWithSource:jScript injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:YES];
     WKUserContentController *userContentController = [[WKUserContentController alloc] init];
-    if (config.isConfigMeta) {
-         [userContentController addUserScript:wkUScript];
-    }
     if (config.scriptMessageNames) {
         for (NSString *jsName in config.scriptMessageNames) {
-             [userContentController addScriptMessageHandler:[[HJQ_WeakScriptMessageDelegate alloc]initWithDelegate:self] name:[NSString stringWithFormat:@"%@", jsName]];
+             [userContentController addScriptMessageHandler:[[JQWeakScriptMessageDelegate alloc]initWithDelegate:self] name:[NSString stringWithFormat:@"%@", jsName]];
          }
+    }
+    if (config.cookieSource) {
+            WKUserScript *cookieScript = [[WKUserScript alloc] initWithSource:config.cookieSource injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
+        [userContentController addUserScript:cookieScript];
     }
     self.wkConfig.userContentController = userContentController;
     [self setUserAgent:config.userAgent?:@""];
-    if (config.request) {
-        [self.wkWebView loadRequest:config.request];
+}
+
+- (void)loadRequest:(NSURLRequest *) request {
+    [self.wkWebView loadRequest:request];
+}
+
+- (void)reload {
+    [self.wkWebView reload];
+}
+
+- (void)goBack {
+    if ([self canGoBack]) {
+        [self.wkWebView goBack];
     }
 }
 
-- (void) refresh {
-    if (self.config.request) {
-        [self.wkWebView loadRequest:self.config.request];
+- (void)goForward {
+    if ([self canGoForward]) {
+        [self.wkWebView goForward];
     }
 }
 
-- (void) goBack {
-    [self.wkWebView goBack];
+- (BOOL)canGoForward {
+    return [self.wkWebView canGoForward];
 }
 
-- (BOOL) canGoBack {
+- (BOOL)canGoBack {
     return [self.wkWebView canGoBack];
 }
 
-- (void) evaluateJavaScript: (NSString *) js {
+- (void)evaluateJavaScript: (NSString *) js {
     [self.wkWebView evaluateJavaScript:js completionHandler:^(id _Nullable result, NSError * _Nullable error) {
     }];
 }
@@ -136,7 +144,7 @@
 }
 
 #pragma mark - Private methods
-- (void) setupUI {
+- (void)setupUI {
     [self addSubview:self.wkWebView];
     [self.wkWebView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
     [self.wkWebView addObserver:self forKeyPath:@"scrollView.contentSize" options:NSKeyValueObservingOptionNew context:nil];
@@ -190,8 +198,8 @@
             self.contentHeightBlock(scrollView.contentSize.height);
         }
     } else if (object == self.wkWebView && [keyPath isEqualToString:@"title"]) {
-       if (self.titleBlock) {
-            self.titleBlock(self.wkWebView.title);
+       if (self.titleChangeBlock) {
+            self.titleChangeBlock(self.wkWebView.title);
         }
     } else{
         [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
@@ -200,7 +208,6 @@
 
 #pragma mark - WKUIDelegate
 - (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler {
-    // js 里面的alert实现，如果不实现，网页的alert函数无效
     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:message
                                                                              message:nil
                                                                       preferredStyle:UIAlertControllerStyleAlert];
@@ -215,7 +222,6 @@
 }
 
 - (void)webView:(WKWebView *)webView runJavaScriptConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(BOOL))completionHandler {
-    //  js 里面的alert实现，如果不实现，网页的alert函数无效  ,
     UIAlertController *alertController = [UIAlertController alertControllerWithTitle:message
                                                                              message:nil
                                                                       preferredStyle:UIAlertControllerStyleAlert];
@@ -252,83 +258,96 @@
 #pragma mark - WKNavigationDelegate
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
     [self startLoading];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(jqWebView:didStartProvisionalNavigation:)]) {
+        [self.delegate jqWebView:webView didStartProvisionalNavigation:navigation];
+    }
 }
 
 - (void)webView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation {
     [self stopLoding];
 }
 
-// 在收到响应后，决定是否跳转
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler{
 
     NSLog(@"%@",navigationResponse.response.URL.absoluteString);
-    //允许跳转
-    decisionHandler(WKNavigationResponsePolicyAllow);
+    if (self.delegate && [self.delegate respondsToSelector:@selector(jqWebView:decidePolicyForNavigationResponse:decisionHandler:)]) {
+        [self.delegate jqWebView:webView decidePolicyForNavigationResponse:navigationResponse decisionHandler:decisionHandler];
+    } else {
+        decisionHandler(WKNavigationResponsePolicyAllow);
+    }
 }
 
-// 在发送请求之前，决定是否跳转
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler{
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
     NSLog(@"%@",navigationAction.request.URL.absoluteString);
-     NSURL *URL = navigationAction.request.URL;
-        NSString *scheme = [URL scheme];
-        UIApplication *app = [UIApplication sharedApplication];
-        // 打电话
-        if ([scheme isEqualToString:@"tel"]) {
-            if ([app canOpenURL:URL]) {
-                [app openURL:URL];
-                // 一定要加上这句,否则会打开新页面
-                decisionHandler(WKNavigationActionPolicyCancel);
-                return;
-            }
+    NSURL *URL = navigationAction.request.URL;
+    NSString *scheme = [URL scheme];
+    UIApplication *app = [UIApplication sharedApplication];
+
+    // tel
+    if ([scheme isEqualToString:@"tel"]) {
+        if ([app canOpenURL:URL]) {
+            [app openURL:URL];
+            decisionHandler(WKNavigationActionPolicyCancel);
+            return;
         }
-       // 打开appstore
-       if ([navigationAction.request.URL.absoluteString containsString:@"itunes.apple.com"]) {
-          if ([app canOpenURL:navigationAction.request.URL]) {
-             [app openURL:navigationAction.request.URL];
-             decisionHandler(WKNavigationActionPolicyCancel);
-              return;
-          }
-       }
+    }
+
+    // appstore
+    if ([navigationAction.request.URL.absoluteString containsString:@"itunes.apple.com"]) {
+      if ([app canOpenURL:navigationAction.request.URL]) {
+         [app openURL:navigationAction.request.URL];
+         decisionHandler(WKNavigationActionPolicyCancel);
+          return;
+      }
+    }
 #pragma clang diagnostic pop
-    decisionHandler(WKNavigationActionPolicyAllow);
+    if (self.delegate && [self.delegate respondsToSelector:@selector(jqWebView:decidePolicyForNavigationAction:decisionHandler:)]) {
+        [self.delegate jqWebView:webView decidePolicyForNavigationAction:navigationAction decisionHandler:decisionHandler];
+    } else {
+        decisionHandler(WKNavigationActionPolicyAllow);
+    }
+    
 }
 
 - (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(null_unspecified WKNavigation *)navigation withError:(NSError *)error {
     [self stopLoding];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(jqWebView:didFailProvisionalNavigation:withError:)]) {
+        [self.delegate jqWebView:webView didFailProvisionalNavigation:navigation withError:error];
+    }
+    /*
      if(error.code == NSURLErrorCancelled)  {
          return;
      }
      if (error.code == NSURLErrorUnsupportedURL) {
          return;
      }
+     */
 }
 
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
     [self stopLoding];
-    if (self.finishLoadBlock) {
-        self.finishLoadBlock();
-    }
-    // 计算WKWebView高度
     [webView evaluateJavaScript:@"document.body.offsetHeight" completionHandler:^(id _Nullable result, NSError * _Nullable error) {
         // [result doubleValue]
         if (self.contentHeightBlock) {
             self.contentHeightBlock([result doubleValue]);
         }
     }];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(jqWebView:didFinishNavigation:)]) {
+        [self.delegate jqWebView:webView didFinishNavigation:navigation];
+    }
 }
 
-#pragma mark - 加载JS处理
+#pragma mark - js send data
 - (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
-    if (_jsActionBlock) {
-         _jsActionBlock(message.name, message.body);
+    if (self.jsSendDataBlock) {
+         self.jsSendDataBlock(message.name, message.body);
      }
 }
 
 #pragma mark - Setter & Getter
-
 - (void)setUserAgent:(NSString *)userAgent {
     if (@available(iOS 12.0, *)){
         NSString *baseAgent = [_wkWebView valueForKey:@"applicationNameForUserAgent"];
@@ -354,11 +373,9 @@
 - (WKWebViewConfiguration *)wkConfig {
     if (!_wkConfig) {
         _wkConfig = [[WKWebViewConfiguration alloc]init];
-        // 支持在线音频视频播放
         _wkConfig.allowsInlineMediaPlayback = YES;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        // 允许自动播放
         _wkConfig.mediaPlaybackRequiresUserAction = NO;
 #pragma clang diagnostic pop
         
