@@ -18,6 +18,7 @@
 @property (nonatomic, strong) CALayer *progresslayer;
 @property (nonatomic, strong) WKWebViewConfiguration *wkConfig;
 @property (nonatomic, strong) JQConfig *config;
+@property (nonatomic, strong) WKWebViewJavascriptBridge *bridge;
 
 @end
 
@@ -94,16 +95,19 @@
     }
     WKUserContentController *userContentController = [[WKUserContentController alloc] init];
     if (config.scriptMessageNames) {
+        JQWeakScriptMessageDelegate *weakScriptMessageDelegate = [[JQWeakScriptMessageDelegate alloc]initWithDelegate:self];
         for (NSString *jsName in config.scriptMessageNames) {
-             [userContentController addScriptMessageHandler:[[JQWeakScriptMessageDelegate alloc]initWithDelegate:self] name:[NSString stringWithFormat:@"%@", jsName]];
+             [userContentController addScriptMessageHandler:weakScriptMessageDelegate name:[NSString stringWithFormat:@"%@", jsName]];
          }
     }
     if (config.cookieSource) {
-            WKUserScript *cookieScript = [[WKUserScript alloc] initWithSource:config.cookieSource injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
+        WKUserScript *cookieScript = [[WKUserScript alloc] initWithSource:config.cookieSource injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
         [userContentController addUserScript:cookieScript];
     }
     self.wkConfig.userContentController = userContentController;
-    [self setUserAgent:config.userAgent?:@""];
+    if (config.userAgent) {
+        [self setUserAgent:config.userAgent];
+    }
 }
 
 - (void)loadRequest:(NSURLRequest *) request {
@@ -139,12 +143,32 @@
     }];
 }
 
+- (void)setupBridge {
+    _bridge = [WKWebViewJavascriptBridge bridgeForWebView:self.wkWebView];
+    [_bridge setWebViewDelegate:self];
+}
+
+- (void)registerHandler:(NSString *)handlerName handler:(WVJBHandler)handler {
+    [_bridge registerHandler:handlerName handler:handler];
+}
+
+- (void)callHandler:(NSString*)handlerName data:(id)data responseCallback:(WVJBResponseCallback)responseCallback {
+    [_bridge callHandler:handlerName data:data responseCallback:responseCallback];
+}
+
 - (WKWebView *)getWKWebView {
     return self.wkWebView;
 }
 
 #pragma mark - Private methods
 - (void)setupUI {
+    if (@available(iOS 11.0, *)) {
+        self.wkWebView.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+    } else {
+        if ([self findViewController]) {
+            [self findViewController].automaticallyAdjustsScrollViewInsets = NO;
+        }
+    }
     [self addSubview:self.wkWebView];
     [self.wkWebView addObserver:self forKeyPath:@"estimatedProgress" options:NSKeyValueObservingOptionNew context:nil];
     [self.wkWebView addObserver:self forKeyPath:@"scrollView.contentSize" options:NSKeyValueObservingOptionNew context:nil];
@@ -208,70 +232,87 @@
 
 #pragma mark - WKUIDelegate
 - (void)webView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler {
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:message
-                                                                             message:nil
-                                                                      preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"确定"
-                                                        style:UIAlertActionStyleCancel
-                                                      handler:^(UIAlertAction *action) {
-                                                          completionHandler();
-                                                      }]];
     
-    [[self findViewController] presentViewController:alertController animated:YES completion:^{}];
+    if (self.UIDelegate && [self.UIDelegate respondsToSelector:@selector(jqwebView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:completionHandler:)]) {
+        [self.UIDelegate jqwebView:webView runJavaScriptAlertPanelWithMessage:message initiatedByFrame:frame completionHandler:completionHandler];
+    } else {
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:message
+                                                                                 message:nil
+                                                                          preferredStyle:UIAlertControllerStyleAlert];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"确定"
+                                                            style:UIAlertActionStyleCancel
+                                                          handler:^(UIAlertAction *action) {
+                                                              completionHandler();
+                                                          }]];
+        [[self findViewController] presentViewController:alertController animated:YES completion:^{}];
+    }
 
 }
 
 - (void)webView:(WKWebView *)webView runJavaScriptConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(BOOL))completionHandler {
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:message
-                                                                             message:nil
-                                                                      preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"确定"
-                                                        style:UIAlertActionStyleDefault
-                                                      handler:^(UIAlertAction *action) {
-                                                          completionHandler(YES);
-                                                      }]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"取消"
-                                                        style:UIAlertActionStyleCancel
-                                                      handler:^(UIAlertAction *action){
-                                                          completionHandler(NO);
-                                                      }]];
     
-    [[self findViewController] presentViewController:alertController animated:YES completion:^{}];
-    
+    if (self.UIDelegate && [self.UIDelegate respondsToSelector:@selector(jqwebView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:completionHandler:)]) {
+        [self.UIDelegate jqwebView:webView runJavaScriptConfirmPanelWithMessage:message initiatedByFrame:frame completionHandler:completionHandler];
+    } else {
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:message
+                                                                                  message:nil
+                                                                           preferredStyle:UIAlertControllerStyleAlert];
+         [alertController addAction:[UIAlertAction actionWithTitle:@"确定"
+                                                             style:UIAlertActionStyleDefault
+                                                           handler:^(UIAlertAction *action) {
+                                                               completionHandler(YES);
+                                                           }]];
+         [alertController addAction:[UIAlertAction actionWithTitle:@"取消"
+                                                             style:UIAlertActionStyleCancel
+                                                           handler:^(UIAlertAction *action){
+                                                               completionHandler(NO);
+                                                           }]];
+         [[self findViewController] presentViewController:alertController animated:YES completion:^{}];
+    }
 }
 
-- (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSString *)prompt defaultText:(NSString *)defaultText initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(NSString * _Nullable))completionHandler{
-    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:prompt message:@"" preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
-        textField.text = defaultText;
-    }];
-    [alertController addAction:([UIAlertAction actionWithTitle:@"完成" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        if(alertController.textFields.count > 0) {
-            completionHandler(alertController.textFields[0].text?:@"");
-        } else {
-            completionHandler(@"");
-        }
-    }])];
-    [[self findViewController] presentViewController:alertController animated:YES completion:nil];
+- (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSString *)prompt defaultText:(NSString *)defaultText initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(NSString * _Nullable))completionHandler {
+    
+    if (self.UIDelegate && [self.UIDelegate respondsToSelector:@selector(jqwebView:runJavaScriptTextInputPanelWithPrompt:defaultText:initiatedByFrame:completionHandler:)]) {
+        [self.UIDelegate jqwebView:webView runJavaScriptTextInputPanelWithPrompt:prompt defaultText:defaultText initiatedByFrame:frame completionHandler:completionHandler];
+    } else {
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:prompt message:@"" preferredStyle:UIAlertControllerStyleAlert];
+        [alertController addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+            textField.text = defaultText;
+        }];
+        [alertController addAction:([UIAlertAction actionWithTitle:@"完成" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            if(alertController.textFields.count > 0) {
+                completionHandler(alertController.textFields[0].text?:@"");
+            } else {
+                completionHandler(@"");
+            }
+        }])];
+        [[self findViewController] presentViewController:alertController animated:YES completion:nil];
+    }
 }
 
 #pragma mark - WKNavigationDelegate
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation {
     [self startLoading];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(jqWebView:didStartProvisionalNavigation:)]) {
-        [self.delegate jqWebView:webView didStartProvisionalNavigation:navigation];
+    if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqWebView:didStartProvisionalNavigation:)]) {
+        [self.navigationDelegate jqWebView:webView didStartProvisionalNavigation:navigation];
     }
 }
 
 - (void)webView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation {
     [self stopLoding];
+    if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqwebView:didCommitNavigation:)]) {
+        [self.navigationDelegate jqwebView:webView didCommitNavigation:navigation];
+    }
 }
 
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationResponse:(WKNavigationResponse *)navigationResponse decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler{
 
-    NSLog(@"%@",navigationResponse.response.URL.absoluteString);
-    if (self.delegate && [self.delegate respondsToSelector:@selector(jqWebView:decidePolicyForNavigationResponse:decisionHandler:)]) {
-        [self.delegate jqWebView:webView decidePolicyForNavigationResponse:navigationResponse decisionHandler:decisionHandler];
+    if (self.config.isShowLog) {
+        NSLog(@"%@",navigationResponse.response.URL.absoluteString);
+    }
+    if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqWebView:decidePolicyForNavigationResponse:decisionHandler:)]) {
+        [self.navigationDelegate jqWebView:webView decidePolicyForNavigationResponse:navigationResponse decisionHandler:decisionHandler];
     } else {
         decisionHandler(WKNavigationResponsePolicyAllow);
     }
@@ -280,7 +321,9 @@
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler{
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    NSLog(@"%@",navigationAction.request.URL.absoluteString);
+    if (self.config.isShowLog) {
+        NSLog(@"%@",navigationAction.request.URL.absoluteString);
+    }
     NSURL *URL = navigationAction.request.URL;
     NSString *scheme = [URL scheme];
     UIApplication *app = [UIApplication sharedApplication];
@@ -303,8 +346,8 @@
       }
     }
 #pragma clang diagnostic pop
-    if (self.delegate && [self.delegate respondsToSelector:@selector(jqWebView:decidePolicyForNavigationAction:decisionHandler:)]) {
-        [self.delegate jqWebView:webView decidePolicyForNavigationAction:navigationAction decisionHandler:decisionHandler];
+    if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqWebView:decidePolicyForNavigationAction:decisionHandler:)]) {
+        [self.navigationDelegate jqWebView:webView decidePolicyForNavigationAction:navigationAction decisionHandler:decisionHandler];
     } else {
         decisionHandler(WKNavigationActionPolicyAllow);
     }
@@ -313,8 +356,8 @@
 
 - (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(null_unspecified WKNavigation *)navigation withError:(NSError *)error {
     [self stopLoding];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(jqWebView:didFailProvisionalNavigation:withError:)]) {
-        [self.delegate jqWebView:webView didFailProvisionalNavigation:navigation withError:error];
+    if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqWebView:didFailProvisionalNavigation:withError:)]) {
+        [self.navigationDelegate jqWebView:webView didFailProvisionalNavigation:navigation withError:error];
     }
     /*
      if(error.code == NSURLErrorCancelled)  {
@@ -326,7 +369,6 @@
      */
 }
 
-
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
     [self stopLoding];
     [webView evaluateJavaScript:@"document.body.offsetHeight" completionHandler:^(id _Nullable result, NSError * _Nullable error) {
@@ -335,8 +377,8 @@
             self.contentHeightBlock([result doubleValue]);
         }
     }];
-    if (self.delegate && [self.delegate respondsToSelector:@selector(jqWebView:didFinishNavigation:)]) {
-        [self.delegate jqWebView:webView didFinishNavigation:navigation];
+    if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqWebView:didFinishNavigation:)]) {
+        [self.navigationDelegate jqWebView:webView didFinishNavigation:navigation];
     }
 }
 
@@ -374,6 +416,7 @@
     if (!_wkConfig) {
         _wkConfig = [[WKWebViewConfiguration alloc]init];
         _wkConfig.allowsInlineMediaPlayback = YES;
+        //_wkConfig.preferences.minimumFontSize = 0;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         _wkConfig.mediaPlaybackRequiresUserAction = NO;
@@ -385,7 +428,11 @@
 
 - (UIActivityIndicatorView *)loadingView {
     if (!_loadingView) {
-        _loadingView = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+        if (@available(iOS 13.0, *)) {
+            _loadingView = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleMedium];
+        } else {
+            _loadingView = [[UIActivityIndicatorView alloc]initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+        }
     }
     return _loadingView;;
 }

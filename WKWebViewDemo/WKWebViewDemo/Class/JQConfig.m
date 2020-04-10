@@ -13,7 +13,10 @@
 - (instancetype)init {
     self = [super init];
     if (self) {
-        self.progressColor = [UIColor colorWithRed:22.f / 255.f green:126.f / 255.f blue:251.f / 255.f alpha:.8];;
+        self.progressColor = [UIColor colorWithRed:22.f / 255.f green:126.f / 255.f blue:251.f / 255.f alpha:.8];
+#if DEBUG
+        self.isShowLog = YES;
+#endif
     }
     return self;
 }

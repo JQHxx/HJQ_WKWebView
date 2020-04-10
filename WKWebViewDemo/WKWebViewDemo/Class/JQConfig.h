@@ -44,6 +44,11 @@ typedef enum {
 */
 @property (nonatomic, copy) NSString *cookieSource;
 
+/**
+*  show log
+*/
+@property (nonatomic, assign) BOOL isShowLog;
+
 @end
 
 NS_ASSUME_NONNULL_END
