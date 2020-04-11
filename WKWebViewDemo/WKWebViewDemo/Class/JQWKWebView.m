@@ -110,12 +110,20 @@
     }
 }
 
-- (void)loadRequest:(NSURLRequest *) request {
+- (void)loadRequest:(NSMutableURLRequest *) request {
     [self.wkWebView loadRequest:request];
+}
+
+- (void)loadHTMLString:(NSString *)string baseURL:(nullable NSURL *)baseURL {
+    [self.wkWebView loadHTMLString:string baseURL:baseURL];
 }
 
 - (void)reload {
     [self.wkWebView reload];
+}
+
+- (void)reloadFromOrigin {
+    [self.wkWebView reloadFromOrigin];
 }
 
 - (void)goBack {
@@ -138,9 +146,24 @@
     return [self.wkWebView canGoBack];
 }
 
-- (void)evaluateJavaScript: (NSString *) js {
-    [self.wkWebView evaluateJavaScript:js completionHandler:^(id _Nullable result, NSError * _Nullable error) {
+- (void)callJS:(NSString *)jsMethod handler:(void (^)(id response, NSError *error))handler {
+    [self.wkWebView evaluateJavaScript:jsMethod completionHandler:^(id _Nullable response, NSError * _Nullable error) {
+        if (handler) {
+            handler(response,error);
+        }
     }];
+}
+
+/**
+ *  注销 注册过的js回调oc通知方式，适用于 iOS8 之后
+ */
+- (void)removeScriptMessageHandlerForName:(NSString *)name {
+    [self.wkConfig.userContentController removeScriptMessageHandlerForName:name];
+}
+
+ /** 清除所有缓存（cookie除外） */
+- (void)clearWebCacheFinish:(void(^)(BOOL finish,NSError *error))block {
+    [WKWebViewCacheTool clearWebCacheFinish:block];
 }
 
 - (void)setupBridge {
@@ -150,6 +173,14 @@
 
 - (void)registerHandler:(NSString *)handlerName handler:(WVJBHandler)handler {
     [_bridge registerHandler:handlerName handler:handler];
+}
+
+- (void)removeHandler:(NSString*)handlerName {
+    [_bridge removeHandler:handlerName];
+}
+
+- (void)reset {
+    [_bridge reset];
 }
 
 - (void)callHandler:(NSString*)handlerName data:(id)data responseCallback:(WVJBResponseCallback)responseCallback {
@@ -218,7 +249,7 @@
         }
     } else if(object == self.wkWebView && [keyPath isEqual:@"scrollView.contentSize"]) {
         UIScrollView *scrollView = self.wkWebView.scrollView;
-        if (self.contentHeightBlock) {
+        if (self.contentHeightBlock && !self.wkWebView.isLoading) {
             self.contentHeightBlock(scrollView.contentSize.height);
         }
     } else if (object == self.wkWebView && [keyPath isEqualToString:@"title"]) {
@@ -370,7 +401,16 @@
 }
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
-    [self stopLoding];
+    
+     [self stopLoding];
+    if ([webView.URL.absoluteString.lowercaseString isEqualToString:@"about:blank"]) {
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        [webView.backForwardList performSelector:NSSelectorFromString(@"_removeAllItems")];
+#pragma clang diagnostic pop
+
+    }
     [webView evaluateJavaScript:@"document.body.offsetHeight" completionHandler:^(id _Nullable result, NSError * _Nullable error) {
         // [result doubleValue]
         if (self.contentHeightBlock) {
@@ -379,6 +419,15 @@
     }];
     if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqWebView:didFinishNavigation:)]) {
         [self.navigationDelegate jqWebView:webView didFinishNavigation:navigation];
+    }
+}
+
+// //web内存过大，进程终止，重新加载webView
+- (void)webViewWebContentProcessDidTerminate:(WKWebView *)webView {
+    if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqwebViewWebContentProcessDidTerminate:)]) {
+        [self.navigationDelegate jqwebViewWebContentProcessDidTerminate:webView];
+    } else {
+        [self.wkWebView reload];
     }
 }
 

@@ -8,8 +8,12 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <WebKit/WebKit.h>
+#import <objc/runtime.h>
 
 NS_ASSUME_NONNULL_BEGIN
+
+typedef void(^JQImageBlock)(id data);
 
 @interface NSString (JQWKWebViewEX)
 
@@ -20,8 +24,19 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSString *)escapeHTML;
 
 // 去除转义符，变成普通的标签<>
-- (NSString *) unescapeHTML;
+- (NSString *)unescapeHTML;
 
+@end
+
+@interface WKWebView (Images)
+
+@property (nonatomic, copy) JQImageBlock imageBlock;
+
+- (void) addTapImageGesture:(JQImageBlock) imageBlock;
+
+- (void) addLongTapImageGesture:(JQImageBlock) imageBlock;
+
+- (void) addTapImagesGesture:(JQImageBlock) imageBlock;
 
 @end
 

@@ -11,6 +11,7 @@
 #import "JQConfig.h"
 #import "JQWKWebViewEX.h"
 #import "WKWebViewJavascriptBridge.h"
+#import "WKWebViewCacheTool.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -28,6 +29,7 @@ typedef void(^JQResponseCallback)(NSDictionary *data, WVJBResponseCallback respo
 - (void)jqwebView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation;
 - (void)jqWebView:(WKWebView *)webView didFailProvisionalNavigation:(null_unspecified WKNavigation *)navigation withError:(NSError *)error;
 - (void)jqWebView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation;
+- (void)jqwebViewWebContentProcessDidTerminate:(WKWebView *)webView;
 
 @end
 
@@ -53,9 +55,14 @@ typedef void(^JQResponseCallback)(NSDictionary *data, WVJBResponseCallback respo
 
 - (void)setConfig:(JQConfig *)config;
 
-- (void)loadRequest:(NSURLRequest *) request;
+- (void)loadRequest:(NSMutableURLRequest *) request;
+
+- (void)loadHTMLString:(NSString *)string baseURL:(nullable NSURL *)baseURL;
 
 - (void)reload;
+
+/** 重新加载网页,忽略缓存 */
+- (void)reloadFromOrigin;
 
 - (BOOL)canGoBack;
 
@@ -69,12 +76,24 @@ typedef void(^JQResponseCallback)(NSDictionary *data, WVJBResponseCallback respo
 
 - (WKWebView *)getWKWebView;
 
-- (void)evaluateJavaScript:(NSString *) js;
+- (void)callJS:(NSString *)jsMethod handler:(void (^)(id response, NSError *error))handler;
+
+/**
+ *  注销 注册过的js回调oc通知方式，适用于 iOS8 之后
+ */
+- (void)removeScriptMessageHandlerForName:(NSString *)name;
+
+ /** 清除所有缓存（cookie除外） */
+- (void)clearWebCacheFinish:(void(^)(BOOL finish,NSError *error))block;
 
 // WebViewJavascriptBridge
 - (void)setupBridge;
 
 - (void)registerHandler:(NSString *)handlerName handler:(WVJBHandler)handler;
+
+- (void)removeHandler:(NSString*)handlerName;
+
+- (void)reset;
 
 - (void)callHandler:(NSString*)handlerName data:(id)data responseCallback:(WVJBResponseCallback)responseCallback;
 

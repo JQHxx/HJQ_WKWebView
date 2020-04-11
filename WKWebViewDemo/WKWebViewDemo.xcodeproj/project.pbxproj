@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A01706A924414F3B00953421 /* WKWebViewCacheTool.m in Sources */ = {isa = PBXBuildFile; fileRef = A01706A824414F3B00953421 /* WKWebViewCacheTool.m */; };
 		A0F38FC2243D7A34002D7FBA /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FC1243D7A34002D7FBA /* AppDelegate.m */; };
 		A0F38FC8243D7A34002D7FBA /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FC7243D7A34002D7FBA /* ViewController.m */; };
 		A0F38FCB243D7A34002D7FBA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A0F38FC9243D7A34002D7FBA /* Main.storyboard */; };
@@ -43,6 +44,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A01706A724414F3B00953421 /* WKWebViewCacheTool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WKWebViewCacheTool.h; sourceTree = "<group>"; };
+		A01706A824414F3B00953421 /* WKWebViewCacheTool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WKWebViewCacheTool.m; sourceTree = "<group>"; };
 		A0F38FBD243D7A34002D7FBA /* WKWebViewDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WKWebViewDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0F38FC0243D7A34002D7FBA /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		A0F38FC1243D7A34002D7FBA /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -171,6 +174,8 @@
 				A0F38FFD243DA66C002D7FBA /* JQWeakScriptMessageDelegate.m */,
 				A0F39002243EB2EF002D7FBA /* JQWKWebViewEX.h */,
 				A0F39003243EB2EF002D7FBA /* JQWKWebViewEX.m */,
+				A01706A724414F3B00953421 /* WKWebViewCacheTool.h */,
+				A01706A824414F3B00953421 /* WKWebViewCacheTool.m */,
 			);
 			path = Class;
 			sourceTree = "<group>";
@@ -322,6 +327,7 @@
 				A0F39021244000B3002D7FBA /* WKWebViewJavascriptBridge.m in Sources */,
 				A0F39020244000B3002D7FBA /* WebViewJavascriptBridgeBase.m in Sources */,
 				A0F39004243EB2EF002D7FBA /* JQWKWebViewEX.m in Sources */,
+				A01706A924414F3B00953421 /* WKWebViewCacheTool.m in Sources */,
 				A0F38FFB243D9F77002D7FBA /* JQConfig.m in Sources */,
 				A0F38FC8243D7A34002D7FBA /* ViewController.m in Sources */,
 				A0F38FC2243D7A34002D7FBA /* AppDelegate.m in Sources */,

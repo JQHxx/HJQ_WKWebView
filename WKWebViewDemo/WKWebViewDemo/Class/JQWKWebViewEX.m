@@ -131,3 +131,88 @@
 }
 
 @end
+
+static char *JQImagesKey = "JQImagesKey";
+@implementation WKWebView (Images)
+
+- (void) addTapImageGesture: (JQImageBlock) imageBlock {
+    self.imageBlock = imageBlock;
+    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureAction:)];
+    tapGesture.numberOfTapsRequired = 1;
+    tapGesture.delegate = (id)self;
+    [self addGestureRecognizer:tapGesture];
+}
+
+- (void) addTapImagesGesture: (JQImageBlock) imageBlock {
+    self.imageBlock = imageBlock;
+    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAllGestureAction:)];
+    tapGesture.numberOfTapsRequired = 1;
+    tapGesture.delegate = (id)self;
+    [self addGestureRecognizer:tapGesture];
+}
+
+- (void) addLongTapImageGesture:(JQImageBlock) imageBlock {
+    self.imageBlock = imageBlock;
+    UILongPressGestureRecognizer *tapGesture = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(tapGestureAction:)];
+    tapGesture.minimumPressDuration = 1.0;
+    tapGesture.delegate = (id)self;
+    [self addGestureRecognizer:tapGesture];
+}
+
+//这里增加手势的返回，不然会被WKWebView拦截
+- (BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    return YES;
+}
+
+#pragma mark - Event response
+- (void) tapGestureAction:(UITapGestureRecognizer *)recognizer {
+    //首先要获取用户点击在WKWebView 的范围点
+    CGPoint touchPoint = [recognizer locationInView:self];
+    NSString *imgURLJS = [NSString stringWithFormat:@"document.elementFromPoint(%f, %f).src", touchPoint.x, touchPoint.y];
+    //跟着注入JS 获取 异步获取结果
+    [self evaluateJavaScript:imgURLJS completionHandler:^(id result, NSError * _Nullable error) {
+        if (error == nil)
+        {
+            NSString *url = result;
+            if (url.length == 0) {
+                return ;
+            } else {
+                if (self.imageBlock) {
+                    self.imageBlock(url);
+                }
+            }
+        }
+    }];
+}
+
+- (void) tapAllGestureAction:(UITapGestureRecognizer *)recognizer {
+    static  NSString * const jsGetImages =
+    @"function getImages(){\
+    var objs = document.getElementsByTagName(\"img\");\
+    var imgScr = '';\
+    for(var i=0;i<objs.length;i++){\
+    imgScr = imgScr + objs[i].src + '+';\
+    };\
+    return imgScr;\
+    };";
+    
+    [self evaluateJavaScript:jsGetImages completionHandler:nil];
+    [self evaluateJavaScript:@"getImages()" completionHandler:^(id _Nullable result, NSError * _Nullable error) {
+        NSArray *urlArray = [NSMutableArray arrayWithArray:[result componentsSeparatedByString:@"+"]];
+        //urlResurlt 就是获取到得所有图片的url的拼接；mUrlArray就是所有Url的数组
+        if (self.imageBlock) {
+             self.imageBlock(urlArray);
+         }
+    }];
+}
+
+#pragma mark - Setter & Getter
+- (void)setImageBlock:(JQImageBlock)imageBlock {
+    objc_setAssociatedObject(self, JQImagesKey, imageBlock, OBJC_ASSOCIATION_COPY_NONATOMIC);
+}
+
+- (JQImageBlock)imageBlock {
+    return objc_getAssociatedObject(self, JQImagesKey);
+}
+
+@end
