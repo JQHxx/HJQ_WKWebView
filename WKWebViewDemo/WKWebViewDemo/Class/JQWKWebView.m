@@ -431,6 +431,18 @@
     }
 }
 
+- (void)webView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler {
+
+    if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqwebView:didReceiveAuthenticationChallenge:completionHandler:)]) {
+        [self.navigationDelegate jqwebView:webView didReceiveAuthenticationChallenge:challenge completionHandler:completionHandler];
+    } else {
+        if([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust]) {
+            NSURLCredential *card = [[NSURLCredential alloc]initWithTrust:challenge.protectionSpace.serverTrust];
+            completionHandler(NSURLSessionAuthChallengeUseCredential, card);
+        }
+    }
+}
+ 
 #pragma mark - js send data
 - (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message {
     if (self.jsSendDataBlock) {
@@ -470,6 +482,13 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         _wkConfig.mediaPlaybackRequiresUserAction = NO;
 #pragma clang diagnostic pop
+        _wkConfig.preferences.javaScriptEnabled = YES;
+        _wkConfig.preferences.javaScriptCanOpenWindowsAutomatically = YES;
+        _wkConfig.suppressesIncrementalRendering = YES; // 是否支持记忆读取
+        [_wkConfig.preferences setValue:@YES forKey:@"allowFileAccessFromFileURLs"];
+        if (@available(iOS 10.0, *)) {
+          [_wkConfig setValue:@YES forKey:@"allowUniversalAccessFromFileURLs"];
+        }
         
     }
     return _wkConfig;

@@ -30,6 +30,7 @@ typedef void(^JQResponseCallback)(NSDictionary *data, WVJBResponseCallback respo
 - (void)jqWebView:(WKWebView *)webView didFailProvisionalNavigation:(null_unspecified WKNavigation *)navigation withError:(NSError *)error;
 - (void)jqWebView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation;
 - (void)jqwebViewWebContentProcessDidTerminate:(WKWebView *)webView;
+- (void)jqwebView:(WKWebView *)webView didReceiveAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable))completionHandler;
 
 @end
 
