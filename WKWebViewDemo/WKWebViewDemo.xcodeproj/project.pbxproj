@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A01706A924414F3B00953421 /* WKWebViewCacheTool.m in Sources */ = {isa = PBXBuildFile; fileRef = A01706A824414F3B00953421 /* WKWebViewCacheTool.m */; };
+		A03F707024483B630063E83C /* demo.html in Resources */ = {isa = PBXBuildFile; fileRef = A03F706F24483B630063E83C /* demo.html */; };
 		A0F38FC2243D7A34002D7FBA /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FC1243D7A34002D7FBA /* AppDelegate.m */; };
 		A0F38FC8243D7A34002D7FBA /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A0F38FC7243D7A34002D7FBA /* ViewController.m */; };
 		A0F38FCB243D7A34002D7FBA /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A0F38FC9243D7A34002D7FBA /* Main.storyboard */; };
@@ -46,6 +47,7 @@
 /* Begin PBXFileReference section */
 		A01706A724414F3B00953421 /* WKWebViewCacheTool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WKWebViewCacheTool.h; sourceTree = "<group>"; };
 		A01706A824414F3B00953421 /* WKWebViewCacheTool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = WKWebViewCacheTool.m; sourceTree = "<group>"; };
+		A03F706F24483B630063E83C /* demo.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = demo.html; sourceTree = "<group>"; };
 		A0F38FBD243D7A34002D7FBA /* WKWebViewDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WKWebViewDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0F38FC0243D7A34002D7FBA /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		A0F38FC1243D7A34002D7FBA /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -128,6 +130,7 @@
 		A0F38FBF243D7A34002D7FBA /* WKWebViewDemo */ = {
 			isa = PBXGroup;
 			children = (
+				A03F706F24483B630063E83C /* demo.html */,
 				A0F39017244000B2002D7FBA /* WebViewJavascriptBridge */,
 				A0F38FF5243D7A4D002D7FBA /* Class */,
 				A0F38FC0243D7A34002D7FBA /* AppDelegate.h */,
@@ -297,6 +300,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A0F38FD0243D7A37002D7FBA /* LaunchScreen.storyboard in Resources */,
+				A03F707024483B630063E83C /* demo.html in Resources */,
 				A0F38FCD243D7A37002D7FBA /* Assets.xcassets in Resources */,
 				A0F38FCB243D7A34002D7FBA /* Main.storyboard in Resources */,
 			);
