@@ -22,7 +22,8 @@
     _webView.frame = self.view.bounds;
     JQConfig *config = [[JQConfig alloc]init];
     config.indicatorType = Activity;
-    NSURL *url = [[NSBundle mainBundle] URLForResource:@"demo.html" withExtension:nil];
+    NSURL *url = [NSURL URLWithString:@"https://www.baidu.com"];
+    //[[NSBundle mainBundle] URLForResource:@"demo.html" withExtension:nil];
     [_webView setConfig:config];
     [_webView loadRequest:[[NSMutableURLRequest alloc]initWithURL:url]];
     _webView.backgroundColor = [UIColor whiteColor];

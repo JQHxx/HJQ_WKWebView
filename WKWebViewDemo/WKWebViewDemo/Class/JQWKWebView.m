@@ -110,8 +110,10 @@
     }
 }
 
+
 - (void)loadRequest:(NSMutableURLRequest *) request {
-    [self.wkWebView loadRequest:request];
+    // 解决首次加载Cookie带不上问题
+    [self.wkWebView loadRequest:[self fixRequest:request]];
 }
 
 - (void)loadHTMLString:(NSString *)string baseURL:(nullable NSURL *)baseURL {
@@ -187,6 +189,15 @@
     [_bridge callHandler:handlerName data:data responseCallback:responseCallback];
 }
 
+/*!
+ *  更新webView的cookie 解决后续Ajax请求Cookie丢失问题
+ */
+- (void)updateWebViewCookie {
+    WKUserScript * cookieScript = [[WKUserScript alloc] initWithSource:[self cookieString] injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
+    // 添加Cookie
+    [self.wkConfig.userContentController addUserScript:cookieScript];
+}
+
 - (WKWebView *)getWKWebView {
     return self.wkWebView;
 }
@@ -228,6 +239,43 @@
         [_loadingView stopAnimating];
         _loadingView.hidden = YES;
     }
+}
+
+/**
+ 修复打开链接Cookie丢失问题
+
+ @param request 请求
+ @return 一个fixedRequest
+ */
+- (NSURLRequest *)fixRequest:(NSURLRequest *)request {
+    NSMutableURLRequest *fixedRequest;
+    if ([request isKindOfClass:[NSMutableURLRequest class]]) {
+        fixedRequest = (NSMutableURLRequest *)request;
+    } else {
+        fixedRequest = request.mutableCopy;
+    }
+    //防止Cookie丢失
+    NSDictionary *dict = [NSHTTPCookie requestHeaderFieldsWithCookies:[NSHTTPCookieStorage sharedHTTPCookieStorage].cookies];
+    if (dict.count) {
+        NSMutableDictionary *mDict = request.allHTTPHeaderFields.mutableCopy;
+        [mDict setValuesForKeysWithDictionary:dict];
+        fixedRequest.allHTTPHeaderFields = mDict;
+    }
+    return fixedRequest;
+}
+
+- (NSString *)cookieString {
+    NSMutableString *script = [NSMutableString string];
+    [script appendString:@"var cookieNames = document.cookie.split('; ').map(function(cookie) { return cookie.split('=')[0] } );\n"];
+    for (NSHTTPCookie *cookie in [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookies]) {
+        // Skip cookies that will break our script
+        if ([cookie.value rangeOfString:@"'"].location != NSNotFound) {
+            continue;
+        }
+        // Create a line that appends this cookie to the web view's document's cookies
+        [script appendFormat:@"if (cookieNames.indexOf('%@') == -1) { document.cookie='%@'; };\n", cookie.name, cookie.da_javascriptString];
+    }
+    return script;
 }
 
 #pragma mark - KVO
@@ -322,11 +370,16 @@
     }
 }
 
--(WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures {
-    if (!navigationAction.targetFrame.isMainFrame) {
-        [webView loadRequest:navigationAction.request];
+- (WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures {
+    if (self.UIDelegate && [self.UIDelegate respondsToSelector:@selector(jqwebView:createWebViewWithConfiguration:forNavigationAction:windowFeatures:)]) {
+        return [self.UIDelegate jqwebView:webView createWebViewWithConfiguration:configuration forNavigationAction:navigationAction windowFeatures:windowFeatures];
+    } else {
+        if (!navigationAction.targetFrame.isMainFrame) {
+            // 这里不打开新窗口
+            [webView loadRequest:[self fixRequest:navigationAction.request]];
+        }
+        return nil;
     }
-    return nil;
 }
 
 #pragma mark - WKNavigationDelegate
@@ -365,6 +418,12 @@
     NSURL *URL = navigationAction.request.URL;
     NSString *scheme = [URL scheme];
     UIApplication *app = [UIApplication sharedApplication];
+
+    //解决Cookie丢失问题
+    NSURLRequest *originalRequest = navigationAction.request;
+    [self fixRequest:originalRequest];
+    //如果originalRequest就是NSMutableURLRequest, originalRequest中已添加必要的Cookie，可以跳转
+
 
     // tel
     if ([scheme isEqualToString:@"tel"]) {

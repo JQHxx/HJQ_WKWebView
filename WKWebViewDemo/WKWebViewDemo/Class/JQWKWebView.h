@@ -39,6 +39,7 @@ typedef void(^JQResponseCallback)(NSDictionary *data, WVJBResponseCallback respo
 - (void)jqwebView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler;
 - (void)jqwebView:(WKWebView *)webView runJavaScriptConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(BOOL))completionHandler;
 - (void)jqwebView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSString *)prompt defaultText:(NSString *)defaultText initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(NSString * _Nullable))completionHandler;
+-(WKWebView *)jqwebView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures;
 
 @end
 
@@ -74,6 +75,8 @@ typedef void(^JQResponseCallback)(NSDictionary *data, WVJBResponseCallback respo
 - (void)goForward;
 
 - (void)pauseWebPlay;
+
+- (void)updateWebViewCookie;
 
 - (WKWebView *)getWKWebView;
 

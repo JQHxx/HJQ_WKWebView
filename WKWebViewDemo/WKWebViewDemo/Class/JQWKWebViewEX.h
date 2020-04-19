@@ -40,4 +40,10 @@ typedef void(^JQImageBlock)(id data);
 
 @end
 
+@interface NSHTTPCookie (Utils)
+
+- (NSString *)da_javascriptString;
+
+@end
+
 NS_ASSUME_NONNULL_END
