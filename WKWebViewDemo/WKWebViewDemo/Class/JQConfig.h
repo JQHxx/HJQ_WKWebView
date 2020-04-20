@@ -49,6 +49,11 @@ typedef enum {
 */
 @property (nonatomic, assign) BOOL isShowLog;
 
+/**
+* pulldonw refresh
+*/
+@property (nonatomic, assign) BOOL isNeedPullDownRefresh;
+
 @end
 
 NS_ASSUME_NONNULL_END

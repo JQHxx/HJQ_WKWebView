@@ -22,6 +22,7 @@
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     TestWebViewVC *webVC = [[TestWebViewVC alloc]init];
+    webVC.modalPresentationStyle = UIModalPresentationFullScreen;
     [self presentViewController:webVC animated:YES completion:nil];
 }
 

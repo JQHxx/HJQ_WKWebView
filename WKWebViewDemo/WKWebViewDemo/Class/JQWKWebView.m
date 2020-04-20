@@ -13,6 +13,7 @@
 @interface JQWKWebView() <WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler>
 
 @property (nonatomic, strong) WKWebView *wkWebView;
+@property (nonatomic, strong) UIRefreshControl *refreshControl;
 @property (nonatomic, strong) UIActivityIndicatorView *loadingView;
 @property (nonatomic, strong) UIView *progressView;
 @property (nonatomic, strong) CALayer *progresslayer;
@@ -80,9 +81,11 @@
 
 - (void)setConfig:(JQConfig *)config {
     _config = config;
+    [self.progressView removeFromSuperview];
+    [self.loadingView removeFromSuperview];
+    [self.refreshControl removeFromSuperview];
     if (self.config) {
         if (self.config.indicatorType == Progress) {
-            [self.progressView removeFromSuperview];
             [self addSubview:self.progressView];
             CALayer *layer = [CALayer layer];
             layer.frame = CGRectMake(0, 0, 0, 3);
@@ -91,7 +94,6 @@
             self.progresslayer = layer;
             
         } else if(self.config.indicatorType == Activity) {
-            [self.loadingView removeFromSuperview];
             [self addSubview:self.loadingView];
         }
     }
@@ -109,6 +111,9 @@
     self.wkConfig.userContentController = userContentController;
     if (config.userAgent) {
         [self setUserAgent:config.userAgent];
+    }
+    if (config.isNeedPullDownRefresh) {
+        [self.wkWebView.scrollView addSubview:self.refreshControl];
     }
 }
 
@@ -283,6 +288,12 @@
         [script appendFormat:@"if (cookieNames.indexOf('%@') == -1) { document.cookie='%@'; };\n", cookie.name, cookie.da_javascriptString];
     }
     return script;
+}
+
+#pragma mark - Event refresh
+- (void) refresh {
+    [self reload];
+    [self.refreshControl endRefreshing];
 }
 
 #pragma mark - KVO
@@ -591,6 +602,15 @@
         _handlerNames = [NSMutableArray array];
     }
     return _handlerNames;
+}
+
+- (UIRefreshControl *)refreshControl {
+    if (!_refreshControl) {
+        UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
+        [refreshControl addTarget:self action:@selector(refresh) forControlEvents:UIControlEventValueChanged];
+        _refreshControl = refreshControl;
+    }
+    return _refreshControl;
 }
 
 @end

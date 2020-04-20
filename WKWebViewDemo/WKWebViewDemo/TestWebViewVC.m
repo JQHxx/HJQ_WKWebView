@@ -22,10 +22,13 @@
     _webView.frame = self.view.bounds;
     JQConfig *config = [[JQConfig alloc]init];
     config.indicatorType = Activity;
+    config.isNeedPullDownRefresh = YES;
     NSURL *url = [NSURL URLWithString:@"https://www.baidu.com"];
     //[[NSBundle mainBundle] URLForResource:@"demo.html" withExtension:nil];
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc]initWithURL:url];
+    [request setValue:@"name" forHTTPHeaderField:@"token"];
     [_webView setConfig:config];
-    [_webView loadRequest:[[NSMutableURLRequest alloc]initWithURL:url]];
+    [_webView loadRequest:request];
     _webView.backgroundColor = [UIColor whiteColor];
     [_webView setupBridge];
     [_webView registerHandler:@"getShare" handler:^(id data, WVJBResponseCallback responseCallback) {
