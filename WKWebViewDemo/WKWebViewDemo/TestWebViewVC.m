@@ -23,7 +23,7 @@
     JQConfig *config = [[JQConfig alloc]init];
     config.indicatorType = Activity;
     config.isNeedPullDownRefresh = YES;
-    NSURL *url = [NSURL URLWithString:@"https://www.baidu.com"];
+    NSURL *url = [NSURL URLWithString:@"https://ph.6632888.com/ph2.html"];
     //[[NSBundle mainBundle] URLForResource:@"demo.html" withExtension:nil];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc]initWithURL:url];
     [request setValue:@"name" forHTTPHeaderField:@"token"];

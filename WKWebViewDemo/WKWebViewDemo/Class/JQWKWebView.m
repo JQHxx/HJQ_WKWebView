@@ -520,9 +520,46 @@
     if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqwebView:didReceiveAuthenticationChallenge:completionHandler:)]) {
         [self.navigationDelegate jqwebView:webView didReceiveAuthenticationChallenge:challenge completionHandler:completionHandler];
     } else {
-        if([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust]) {
+        NSString *hostName = webView.URL.host;
+        NSString *authenticationMethod = [[challenge protectionSpace] authenticationMethod];
+        if ([authenticationMethod isEqualToString:NSURLAuthenticationMethodDefault]
+            || [authenticationMethod isEqualToString:NSURLAuthenticationMethodHTTPBasic]
+            || [authenticationMethod isEqualToString:NSURLAuthenticationMethodHTTPDigest]) {
+            
+            NSString *title = @"Authentication Challenge";
+            NSString *message = [NSString stringWithFormat:@"%@ requires user name and password", hostName];
+            UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:message preferredStyle:UIAlertControllerStyleAlert];
+            [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+                textField.placeholder = @"User";
+                //textField.secureTextEntry = YES;
+            }];
+            [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+                textField.placeholder = @"Password";
+                textField.secureTextEntry = YES;
+            }];
+            [alertController addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+                
+                NSString *userName = ((UITextField *)alertController.textFields[0]).text;
+                NSString *password = ((UITextField *)alertController.textFields[1]).text;
+                
+                NSURLCredential *credential = [[NSURLCredential alloc] initWithUser:userName password:password persistence:NSURLCredentialPersistenceNone];
+                
+                completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+                
+            }]];
+            [alertController addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction *action) {
+                completionHandler(NSURLSessionAuthChallengeUseCredential, nil);
+            }]];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[self findViewController] presentViewController:alertController animated:YES completion:^{}];
+            });
+            
+        } else if ([authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust]) {
+            // needs this handling on iOS 9
             NSURLCredential *card = [[NSURLCredential alloc]initWithTrust:challenge.protectionSpace.serverTrust];
-            completionHandler(NSURLSessionAuthChallengeUseCredential, card);
+            challenge.sender ? completionHandler(NSURLSessionAuthChallengeUseCredential,card) : NULL;
+        } else {
+            completionHandler(NSURLSessionAuthChallengeCancelAuthenticationChallenge, nil);
         }
     }
 }
