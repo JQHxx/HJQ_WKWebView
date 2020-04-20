@@ -19,6 +19,7 @@
 @property (nonatomic, strong) WKWebViewConfiguration *wkConfig;
 @property (nonatomic, strong) JQConfig *config;
 @property (nonatomic, strong) WKWebViewJavascriptBridge *bridge;
+@property (nonatomic, strong) NSMutableArray *handlerNames;
 
 @end
 
@@ -40,6 +41,10 @@
         [self.wkConfig.userContentController removeAllUserScripts];
         self.wkWebView.navigationDelegate = nil;
         self.wkWebView.UIDelegate = nil;
+        for (NSString *str in self.handlerNames) {
+            [self removeHandler:str];
+        }
+        [self.handlerNames removeAllObjects];
     } @catch (NSException *exception) {
         
     } @finally {
@@ -69,11 +74,8 @@
     for (var i=0;i < audios.length;i++){\
         audios[i].pause();\
     }";
-    [self.wkWebView evaluateJavaScript:videoJS completionHandler:^(id _Nullable result, NSError * _Nullable error) {
-    }];
-    
-    [self.wkWebView evaluateJavaScript:mediaJS completionHandler:^(id _Nullable result, NSError * _Nullable error) {
-    }];
+    [self.wkWebView evaluateJavaScript:videoJS completionHandler:nil];
+    [self.wkWebView evaluateJavaScript:mediaJS completionHandler:nil];
 }
 
 - (void)setConfig:(JQConfig *)config {
@@ -111,7 +113,8 @@
 }
 
 - (void)loadRequest:(NSMutableURLRequest *) request {
-    [self.wkWebView loadRequest:request];
+    // 解决首次加载Cookie带不上问题
+    [self.wkWebView loadRequest:[self fixRequest:request]];
 }
 
 - (void)loadHTMLString:(NSString *)string baseURL:(nullable NSURL *)baseURL {
@@ -171,20 +174,35 @@
     [_bridge setWebViewDelegate:self];
 }
 
-- (void)registerHandler:(NSString *)handlerName handler:(WVJBHandler)handler {
+- (void)registerHandler:(NSString *)handlerName handler:(WVJBHandler _Nullable)handler {
     [_bridge registerHandler:handlerName handler:handler];
+    if (handlerName && ![handlerName isKindOfClass:[NSNull class]] && ![self.handlerNames containsObject:handlerName]) {
+        [self.handlerNames addObject:[NSString stringWithFormat:@"%@", handlerName]];
+    }
 }
 
 - (void)removeHandler:(NSString*)handlerName {
     [_bridge removeHandler:handlerName];
+    if (handlerName && ![handlerName isKindOfClass:[NSNull class]] && ![self.handlerNames containsObject:handlerName]) {
+        [self.handlerNames removeObject:[NSString stringWithFormat:@"%@", handlerName]];
+    }
 }
 
 - (void)reset {
     [_bridge reset];
 }
 
-- (void)callHandler:(NSString*)handlerName data:(id)data responseCallback:(WVJBResponseCallback)responseCallback {
+- (void)callHandler:(NSString*)handlerName data:(id _Nullable)data responseCallback:(WVJBResponseCallback _Nullable)responseCallback {
     [_bridge callHandler:handlerName data:data responseCallback:responseCallback];
+}
+
+/*!
+ *  更新webView的cookie 解决后续Ajax请求Cookie丢失问题
+ */
+- (void)updateWebViewCookie {
+    WKUserScript * cookieScript = [[WKUserScript alloc] initWithSource:[self cookieString] injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
+    // 添加Cookie
+    [self.wkConfig.userContentController addUserScript:cookieScript];
 }
 
 - (WKWebView *)getWKWebView {
@@ -228,6 +246,43 @@
         [_loadingView stopAnimating];
         _loadingView.hidden = YES;
     }
+}
+
+/**
+ 修复打开链接Cookie丢失问题
+
+ @param request 请求
+ @return 一个fixedRequest
+ */
+- (NSURLRequest *)fixRequest:(NSURLRequest *)request {
+    NSMutableURLRequest *fixedRequest;
+    if ([request isKindOfClass:[NSMutableURLRequest class]]) {
+        fixedRequest = (NSMutableURLRequest *)request;
+    } else {
+        fixedRequest = request.mutableCopy;
+    }
+    //防止Cookie丢失
+    NSDictionary *dict = [NSHTTPCookie requestHeaderFieldsWithCookies:[NSHTTPCookieStorage sharedHTTPCookieStorage].cookies];
+    if (dict.count) {
+        NSMutableDictionary *mDict = request.allHTTPHeaderFields.mutableCopy;
+        [mDict setValuesForKeysWithDictionary:dict];
+        fixedRequest.allHTTPHeaderFields = mDict;
+    }
+    return fixedRequest;
+}
+
+- (NSString *)cookieString {
+    NSMutableString *script = [NSMutableString string];
+    [script appendString:@"var cookieNames = document.cookie.split('; ').map(function(cookie) { return cookie.split('=')[0] } );\n"];
+    for (NSHTTPCookie *cookie in [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookies]) {
+        // Skip cookies that will break our script
+        if ([cookie.value rangeOfString:@"'"].location != NSNotFound) {
+            continue;
+        }
+        // Create a line that appends this cookie to the web view's document's cookies
+        [script appendFormat:@"if (cookieNames.indexOf('%@') == -1) { document.cookie='%@'; };\n", cookie.name, cookie.da_javascriptString];
+    }
+    return script;
 }
 
 #pragma mark - KVO
@@ -322,11 +377,17 @@
     }
 }
 
--(WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures {
-    if (!navigationAction.targetFrame.isMainFrame) {
-        [webView loadRequest:navigationAction.request];
+- (WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures {
+    if (self.UIDelegate && [self.UIDelegate respondsToSelector:@selector(jqwebView:createWebViewWithConfiguration:forNavigationAction:windowFeatures:)]) {
+        return [self.UIDelegate jqwebView:webView createWebViewWithConfiguration:configuration forNavigationAction:navigationAction windowFeatures:windowFeatures];
+    } else {
+        // 会拦截到window.open()事件
+        if (!navigationAction.targetFrame.isMainFrame) {
+            // 这里不打开新窗口
+            [webView loadRequest:[self fixRequest:navigationAction.request]];
+        }
+        return nil;
     }
-    return nil;
 }
 
 #pragma mark - WKNavigationDelegate
@@ -363,30 +424,35 @@
         NSLog(@"%@",navigationAction.request.URL.absoluteString);
     }
     NSURL *URL = navigationAction.request.URL;
-    NSString *scheme = [URL scheme];
+    NSString *scheme = [[URL scheme] lowercaseString];
     UIApplication *app = [UIApplication sharedApplication];
 
-    // tel
-    if ([scheme isEqualToString:@"tel"]) {
-        if ([app canOpenURL:URL]) {
-            [app openURL:URL];
-            decisionHandler(WKNavigationActionPolicyCancel);
-            return;
-        }
-    }
-
-    // appstore
-    if ([navigationAction.request.URL.absoluteString containsString:@"itunes.apple.com"]) {
-      if ([app canOpenURL:navigationAction.request.URL]) {
-         [app openURL:navigationAction.request.URL];
-         decisionHandler(WKNavigationActionPolicyCancel);
-          return;
-      }
-    }
+    //解决Cookie丢失问题
+    NSURLRequest *originalRequest = navigationAction.request;
+    [self fixRequest:originalRequest];
+    //如果originalRequest就是NSMutableURLRequest, originalRequest中已添加必要的Cookie，可以跳转
+    
 #pragma clang diagnostic pop
     if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqWebView:decidePolicyForNavigationAction:decisionHandler:)]) {
         [self.navigationDelegate jqWebView:webView decidePolicyForNavigationAction:navigationAction decisionHandler:decisionHandler];
     } else {
+        // tel sms mailto
+        if ([scheme isEqualToString:@"tel"] || [scheme isEqualToString:@"sms"] || [scheme isEqualToString:@"mailto"]) {
+            if ([app canOpenURL:URL]) {
+                [app openURL:URL];
+                decisionHandler(WKNavigationActionPolicyCancel);
+                return;
+            }
+        }
+
+        // appstore
+        if ([URL.absoluteString containsString:@"itunes.apple.com"]) {
+          if ([app canOpenURL:URL]) {
+             [app openURL:URL];
+             decisionHandler(WKNavigationActionPolicyCancel);
+             return;
+          }
+        }
         decisionHandler(WKNavigationActionPolicyAllow);
     }
     
@@ -518,6 +584,13 @@
         _progressView.backgroundColor = [UIColor clearColor];
     }
     return _progressView;
+}
+
+- (NSMutableArray *)handlerNames {
+    if (!_handlerNames) {
+        _handlerNames = [NSMutableArray array];
+    }
+    return _handlerNames;
 }
 
 @end

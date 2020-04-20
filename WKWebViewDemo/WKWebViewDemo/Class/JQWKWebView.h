@@ -39,6 +39,7 @@ typedef void(^JQResponseCallback)(NSDictionary *data, WVJBResponseCallback respo
 - (void)jqwebView:(WKWebView *)webView runJavaScriptAlertPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(void))completionHandler;
 - (void)jqwebView:(WKWebView *)webView runJavaScriptConfirmPanelWithMessage:(NSString *)message initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(BOOL))completionHandler;
 - (void)jqwebView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSString *)prompt defaultText:(NSString *)defaultText initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(NSString * _Nullable))completionHandler;
+-(WKWebView *)jqwebView:(WKWebView *)webView createWebViewWithConfiguration:(WKWebViewConfiguration *)configuration forNavigationAction:(WKNavigationAction *)navigationAction windowFeatures:(WKWindowFeatures *)windowFeatures;
 
 @end
 
@@ -75,6 +76,8 @@ typedef void(^JQResponseCallback)(NSDictionary *data, WVJBResponseCallback respo
 
 - (void)pauseWebPlay;
 
+- (void)updateWebViewCookie;
+
 - (WKWebView *)getWKWebView;
 
 - (void)callJS:(NSString *)jsMethod handler:(void (^)(id response, NSError *error))handler;
@@ -90,13 +93,13 @@ typedef void(^JQResponseCallback)(NSDictionary *data, WVJBResponseCallback respo
 // WebViewJavascriptBridge
 - (void)setupBridge;
 
-- (void)registerHandler:(NSString *)handlerName handler:(WVJBHandler)handler;
+- (void)registerHandler:(NSString *)handlerName handler:(WVJBHandler _Nullable)handler;
+
+- (void)callHandler:(NSString*)handlerName data:(id _Nullable)data responseCallback:(WVJBResponseCallback _Nullable)responseCallback;
 
 - (void)removeHandler:(NSString*)handlerName;
 
 - (void)reset;
-
-- (void)callHandler:(NSString*)handlerName data:(id)data responseCallback:(WVJBResponseCallback)responseCallback;
 
 @end
 
