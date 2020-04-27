@@ -447,10 +447,14 @@
     if (self.navigationDelegate && [self.navigationDelegate respondsToSelector:@selector(jqWebView:decidePolicyForNavigationAction:decisionHandler:)]) {
         [self.navigationDelegate jqWebView:webView decidePolicyForNavigationAction:navigationAction decisionHandler:decisionHandler];
     } else {
-        // tel sms mailto
-        if ([scheme isEqualToString:@"tel"] || [scheme isEqualToString:@"sms"] || [scheme isEqualToString:@"mailto"]) {
+        // tel sms mailto telprompt
+        if ([scheme isEqualToString:@"tel"] || [scheme isEqualToString:@"sms"] || [scheme isEqualToString:@"mailto"] || [scheme isEqualToString:@"telprompt"]) {
             if ([app canOpenURL:URL]) {
-                [app openURL:URL];
+                if (@available(iOS 10.0, *)) {
+                      [UIApplication.sharedApplication openURL:URL options:@{} completionHandler:NULL];
+                  } else {
+                      [[UIApplication sharedApplication] openURL:URL];
+                  }
                 decisionHandler(WKNavigationActionPolicyCancel);
                 return;
             }
@@ -459,7 +463,11 @@
         // appstore
         if ([URL.absoluteString containsString:@"itunes.apple.com"]) {
           if ([app canOpenURL:URL]) {
-             [app openURL:URL];
+              if (@available(iOS 10.0, *)) {
+                   [UIApplication.sharedApplication openURL:URL options:@{} completionHandler:NULL];
+               } else {
+                   [[UIApplication sharedApplication] openURL:URL];
+               }
              decisionHandler(WKNavigationActionPolicyCancel);
              return;
           }
@@ -553,7 +561,6 @@
             dispatch_async(dispatch_get_main_queue(), ^{
                 [[self findViewController] presentViewController:alertController animated:YES completion:^{}];
             });
-            
         } else if ([authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust]) {
             // needs this handling on iOS 9
             NSURLCredential *card = [[NSURLCredential alloc]initWithTrust:challenge.protectionSpace.serverTrust];
